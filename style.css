@@ -1,0 +1,32 @@
+/* 
+    Document   : style
+    Created on : 16.03.2013, 18:23:52
+    Author     : Admin
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+/* 
+   TODO customize this sample style
+   Syntax recommendation http://www.w3.org/TR/REC-CSS2/
+*/
+
+root
+{
+    display: block;
+}
+#mainWrapper
+{
+    margin: 0 auto;
+    width: 600px;
+}
+    #mainWrapper form input
+    {
+      width: 175px;
+    }
+    #mainWrapper form textarea
+    {
+        resize: none;
+        width: 300px;
+        height: 200px;
+    }
