@@ -29,13 +29,9 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
   private $code;
   private $frequency;
 
-
-  public function __construct()
+  public function setUp()
   {
     $this->db = new MegaIndexDb();
-    $this->db->createNewDb('megaindex2', 'pdo_mysql', 'localhost', 'root', 'root');
-    $this->em = $this->db->getEntityManager();
-    $this->conn = $this->db->getConnection();
 
     $this->words = array ('маркер', 'карандашь', 'ластик', 'надувная', 'тетрадь', 'точилка', 'штрих', 'линейка', 'транспортир');
     $this->date = array ("now", "-1 day", "-14 days 2 hours 32 minutes", "-10 days 5 hours 32 minutes",
@@ -46,10 +42,11 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
     $this->region = array ('Москва', 'Омск', 'Новосибирск', 'Удмуртия', 'Саратов', 'Сочи', 'Санкт Петербург', 'Гондурас', 'Хохляндия');
     $this->code = array ('1', '55', '59', '13', '77', '44', '23', '98', '65');
     $this->frequency = array ('10000', '6700', '16340', '14200', '12500', '8800', '6700', '3400', '24000');
-  }
 
-  public function setUp()
-  {
+    $this->db->createNewDb('megaindex3', 'pdo_mysql', 'localhost', 'root', 'root');
+    $this->em = $this->db->getEntityManager();
+    $this->conn = $this->db->getConnection();
+
     $this->db->createTables();
 
     for ($i=0; $i<9; $i++)
@@ -94,19 +91,80 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
     }
   }
 
-  public function testRowExist()
+  public function testWordRead()
   {
-    $word = $this->em->getRepository('Entities\Words')->findBy(array('name' => 'маркер'));
+    $word = $this->em->getRepository('Entities\Words')->findBy(array('name' => $this->words[1]));
     $this->assertNotEmpty($word);
+
+    $word = $this->em->getRepository('Entities\Words')->find(6);
+    $this->assertNotEmpty($word);
+
+    $word = $this->em->getRepository('Entities\Words')->findBy(array('name' => array($this->words[1], $this->words[2])));
+    $this->assertNotEmpty($word);
+  }
+
+  public function testDomainRead()
+  {
+    $domain = $this->em->getRepository('Entities\Domain')->find(4);
+    $this->assertNotEmpty($domain);
+
+    $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => $this->domains[1]));
+    $this->assertNotEmpty($domain);
+
+    $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => array($this->domains[1], $this->domains[2])));
+    $this->assertNotEmpty($domain);
+  }
+
+  public function testDomainUpdate()
+  {
+    $newDomain = 'newdomen.com';
+    $newDomain2 = 'newdomen2.com';
+
+    $domain = $this->em->getRepository('Entities\Domain')->find(4);
+    $this->assertNotEmpty($domain);
+
+    $domain->setName($newDomain);
+    $this->em->persist($domain);
+
+    $this->em->flush();
+
+    $domain = $this->em->getRepository('Entities\Domain')->find(4);
+    $this->assertEquals($domain->getName(), $newDomain);
+
+    $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => array($this->domains[1], $this->domains[2])));
+
+    $this->assertNotEmpty($domain);
+    $this->assertInternalType("array", $domain);
+
+    $domain[1]->setName($newDomain2);
+    $this->domains[2] = $newDomain2;
+    foreach ($domain as $objects)
+      $this->em->persist($objects);
+
+    $this->em->flush();
+
+    $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => array($this->domains[1], $this->domains[2])));
+    $this->assertEquals($domain[1]->getName(), $newDomain2);
+  }
+
+  public function testDomainDelete()
+  {
+    $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => array($this->domains[1], $this->domains[2])));
+    $this->assertNotEmpty($domain);
+
+    foreach ($domain as $object)
+      $this->em->remove($object);
+
+    $this->em->flush();
+
+    $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => $this->domains[2]));
+    $this->assertEmpty($domain);
   }
 
   public function tearDown()
   {
     $this->db->destroyTables();
-  }
-
-  public function __destruct()
-  {
-    $this->db->destroyDb('megaindex2');
+    $this->db->destroyDb('megaindex3');
+    $this->conn->close();
   }
 }

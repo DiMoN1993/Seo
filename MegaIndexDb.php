@@ -95,9 +95,9 @@ class MegaIndexDb
     $yp->addIndex(array("word_id"));
     $yp->addIndex(array("domain_id"));
     $yp->addIndex(array("region_id"));
-    $yp->addForeignKeyConstraint($domain, array("domain_id"), array("id"), array("onUpdate" => "CASCADE"));
-    $yp->addForeignKeyConstraint($words, array("word_id"), array("id"), array("onUpdate" => "CASCADE"));
-    $yp->addForeignKeyConstraint($regions, array("region_id"), array("id"), array("onUpdate" => "CASCADE"));
+    $yp->addForeignKeyConstraint($domain, array("domain_id"), array("id"), array("onUpdate" => "CASCADE", "onDelete" => "CASCADE"));
+    $yp->addForeignKeyConstraint($words, array("word_id"), array("id"), array("onUpdate" => "CASCADE", "onDelete" => "CASCADE"));
+    $yp->addForeignKeyConstraint($regions, array("region_id"), array("id"), array("onUpdate" => "CASCADE", "onDelete" => "CASCADE"));
 
     $freq = $toSchema->createTable(self::DEFAULT_PREFIX.self::FREQUENCY);
     $freq->addColumn($primaryKey, "integer", array("length" => 11, "auto_increment" => true));
@@ -109,8 +109,8 @@ class MegaIndexDb
     $freq->getColumn($primaryKey)->setAutoincrement(true);
     $freq->addIndex(array("region_id"));
     $freq->addIndex(array("word_id"));
-    $freq->addForeignKeyConstraint($words, array("word_id"), array("id"), array("onUpdate" => "CASCADE"));
-    $freq->addForeignKeyConstraint($regions, array("region_id"), array("id"), array("onUpdate" => "CASCADE"));
+    $freq->addForeignKeyConstraint($words, array("word_id"), array("id"), array("onUpdate" => "CASCADE", "onDelete" => "CASCADE"));
+    $freq->addForeignKeyConstraint($regions, array("region_id"), array("id"), array("onUpdate" => "CASCADE", "onDelete" => "CASCADE"));
 
     $this->_createSql = $toSchema->toSql($this->_conn->getDatabasePlatform());
     $this->_dropSql = $toSchema->toDropSql($this->_conn->getDatabasePlatform());
@@ -141,7 +141,6 @@ class MegaIndexDb
   public function destroyDb($dbName)
   {
       $this->_sm->dropDatabase($dbName);
-      $this->_conn->close();
   }
 
   public function getConnection()
