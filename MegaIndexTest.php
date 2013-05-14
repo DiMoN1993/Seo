@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-include_once ('MegaIndex.php');
+require_once ('MegaIndex.php');
 
 class MegaIndexTest extends PHPUnit_Framework_TestCase
 {
@@ -51,27 +51,19 @@ class MegaIndexTest extends PHPUnit_Framework_TestCase
     }
   }
 
-  public function testWordStatException() {
-    try {
-      $this->_api->getWordStat($this->_array);
-    }
-
-    catch (Exception $expected) {
-      return;
-    }
-
-    $this->fail($this->_msg);
+  /**
+   * @expectedException Exception
+   */
+  public function testWordStatException()
+  {
+    $this->_api->getWordStat($this->_array);
   }
 
-  public function testYandexPosException() {
-    try {
-      $this->_api->getYandexPosition($this->_array);
-    }
-
-    catch (Exception $expected) {
-      return;
-    }
-
-    $this->fail($this->_msg);
+  /**
+   * @expectedException Exception
+   */
+  public function testYandexPosException()
+  {
+     $this->_api->getYandexPosition($this->_array);
   }
 }
