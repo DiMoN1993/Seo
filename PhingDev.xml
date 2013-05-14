@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+    <project name="Seo" default="dev">
+
+    <property name="folder" value="."/>
+    <!--Test target for auto initialize phpunit tests, check code syntax and generate documentation-->
+        <target name="dev" depends="lint.task, test.task, docs.task">
+            <echo message="All done" />
+        </target>
+    <!--That target do auto check code syntax-->
+        <target name="lint.task">
+            <phplint>
+                <fileset dir="${folder}">
+                    <include name="**/*.php" />
+                    <exclude name="Doctrine/**" />
+                    <exclude name="Entities/**" />
+                </fileset>
+            </phplint>
+            <echo message="Lint done" />
+        </target>
+    <!--That target initialize phpunit tests auto checking-->
+        <target name="test.task">
+            <echo message="Remove old files..." />
+            <delete dir="test" failonerror="true" includeemptydirs="true"/>
+            <echo message="Create file directory..." />
+            <mkdir dir="test" />
+            <phpunit haltonerror="true" haltonfailure="true">
+                <formatter type="xml" todir="test" />
+                    <batchtest>
+                        <fileset dir="${folder}">
+                            <include name="*Test.php"/>
+                            <exclude name="Doctrine/**" />
+                            <exclude name="Entities/**" />
+                        </fileset>
+                    </batchtest>
+            </phpunit>
+            <echo message="Tests done" />
+        </target>
+    <!--This target try generate documentation-->
+        <target name="docs.task">
+            <echo message="Remove old files..." />
+            <delete dir="Docs" failonerror="true" includeemptydirs="true" />
+            <echo message="Create new directory..." />
+            <mkdir dir="Docs" />
+            <docblox title="Seo Documentation" template="new_black" destdir="Docs">
+                <fileset dir="${folder}">
+                    <include name="**/*.php" />
+                    <exclude name="*Test.php" />
+                    <exclude name="Doctrine/**" />
+                    <exclude name="Entities/**" />
+                </fileset>
+            </docblox>
+            <echo message="Docs done" />
+        </target>
+    </project>
