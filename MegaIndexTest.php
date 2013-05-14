@@ -15,7 +15,6 @@ class MegaIndexTest extends PHPUnit_Framework_TestCase
   private $_array = array ('автомобиль', 'космические рейнджеры');
   private $_str = 'космические рейнджеры';
   private $_internalType = 'string';
-  private $_msg = 'Expected exception has not been call.';
 
   public function __construct ()
   {
