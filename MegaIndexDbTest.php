@@ -103,13 +103,60 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
     $this->assertNotEmpty($word);
   }
 
+  public function testWordUpdate()
+  {
+    $newWord = 'чебурашка';
+    $newWord2 = 'большой адронный коллайдер';
+
+    $word = $this->em->getRepository('Entities\Words')->find(4);
+    $this->assertNotEmpty($word);
+
+    $word->setName($newWord);
+    $this->em->persist($word);
+
+    $this->em->flush();
+
+    $word = $this->em->getRepository('Entities\Words')->find(4);
+    $this->assertEquals($word->getName(), $newWord);
+
+    $word = $this->em->getRepository('Entities\Words')->findBy(array('name' => array($this->words[1], $this->words[2])));
+
+    $this->assertNotEmpty($word);
+    $this->assertInternalType("array", $word);
+
+    $word[0]->setName($newWord2);
+    foreach ($word as $row)
+      $this->em->persist($row);
+
+    $this->em->flush();
+
+    $word = $this->em->getRepository('Entities\Words')->findBy(array('name' => array($newWord2, $this->words[2])));
+    $this->assertEquals($word[0]->getName(), $newWord2);
+  }
+
+  public function testWordDelete()
+  {
+    $word = $this->em->getRepository('Entities\Words')->findBy(array('name' => array($this->words[1], $this->words[2])));
+    $this->assertNotEmpty($word);
+
+    foreach ($word as $row)
+      $this->em->remove($row);
+
+    $this->em->flush();
+
+    $word = $this->em->getRepository('Entities\Words')->findBy(array('name' => array($this->words[1], $this->words[2])));
+    $this->assertEmpty($word);
+  }
+
   public function testDomainRead()
   {
     $domain = $this->em->getRepository('Entities\Domain')->find(4);
     $this->assertNotEmpty($domain);
+    $this->assertInternalType('object', $domain);
 
     $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => $this->domains[1]));
     $this->assertNotEmpty($domain);
+    $this->assertInternalType('array', $domain);
 
     $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => array($this->domains[1], $this->domains[2])));
     $this->assertNotEmpty($domain);
@@ -129,6 +176,7 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
     $this->em->flush();
 
     $domain = $this->em->getRepository('Entities\Domain')->find(4);
+
     $this->assertEquals($domain->getName(), $newDomain);
 
     $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => array($this->domains[1], $this->domains[2])));
@@ -137,13 +185,12 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
     $this->assertInternalType("array", $domain);
 
     $domain[1]->setName($newDomain2);
-    $this->domains[2] = $newDomain2;
-    foreach ($domain as $objects)
-      $this->em->persist($objects);
+    foreach ($domain as $row)
+      $this->em->persist($row);
 
     $this->em->flush();
 
-    $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => array($this->domains[1], $this->domains[2])));
+    $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => array($this->domains[1], $newDomain2)));
     $this->assertEquals($domain[1]->getName(), $newDomain2);
   }
 
@@ -152,13 +199,85 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
     $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => array($this->domains[1], $this->domains[2])));
     $this->assertNotEmpty($domain);
 
-    foreach ($domain as $object)
-      $this->em->remove($object);
+    foreach ($domain as $row)
+      $this->em->remove($row);
 
     $this->em->flush();
 
     $domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => $this->domains[2]));
     $this->assertEmpty($domain);
+  }
+
+  public function testYpRead()
+  {
+    $yp = $this->em->getRepository('Entities\YP')->find(4);
+    $this->assertNotEmpty($yp);
+    $this->assertInternalType('object', $yp->getDomain());
+
+    //It's very important request for us, but he doesn't work. We need something equal.
+    //$yp = $this->em->getRepository('Entities\YP')->findBy(array('domain.name' => $this->domains[0], 'word.name' => $this->words[0]));
+    //$this->assertNotEmpty($yp);
+
+    $yp = $this->em->getRepository('Entities\YP')->findBy(array('position' => $this->position[1]));
+    $this->assertNotEmpty($yp);
+
+    $yp = $this->em->getRepository('Entities\YP')->findBy(array('position' => array($this->position[1], $this->position[2])));
+    $this->assertNotEmpty($yp);
+
+    $domain = $this->em->getRepository('Entities\Domain')->findBy(array ('name' => $this->domains[0]));
+    $this->assertInternalType('array', $domain);
+    $word = $this->em->getRepository('Entities\Words')->find(1);
+    $this->assertInternalType('object', $word);
+
+    $yp = $this->em->getRepository('Entities\YP')->findBy(array('domain' => $domain[0]->getId(), 'word' => $word->getId()));
+    $this->assertNotEmpty($yp);
+  }
+
+  public function testYpUpdate()
+  {
+    $newPosition = '33';
+    $newDomain = $this->em->getRepository('Entities\Domain')->find(2);
+    $newWord = $this->em->getRepository('Entities\Words')->find(5);
+
+    $domain = $this->em->getRepository('Entities\Domain')->findBy(array ('name' => $this->domains[0]));
+    $this->assertInternalType('array', $domain);
+    $word = $this->em->getRepository('Entities\Words')->find(1);
+    $this->assertInternalType('object', $word);
+
+    $yp = $this->em->getRepository('Entities\YP')->findBy(array('domain' => $domain[0]->getId(), 'word' => $word->getId()));
+    $this->assertNotEmpty($yp);
+
+    $yp[0]->setPosition($newPosition);
+    $yp[0]->setDomain($newDomain);
+    $yp[0]->setWord($newWord);
+    foreach ($yp as $row)
+      $this->em->persist($row);
+
+    $this->em->flush();
+
+    $yp = $this->em->getRepository('Entities\YP')->findBy(array('domain' => $newDomain->getId(), 'word' => $newWord->getId()));
+    $this->assertEquals($yp[0]->getDomain(), $newDomain);
+    $this->assertEquals($yp[0]->getWord(), $newWord);
+    $this->assertEquals($yp[0]->getPosition(), $newPosition);
+  }
+
+  public function testYpDelete()
+  {
+    $domain = $this->em->getRepository('Entities\Domain')->findBy(array ('name' => $this->domains[0]));
+    $this->assertInternalType('array', $domain);
+    $word = $this->em->getRepository('Entities\Words')->find(1);
+    $this->assertInternalType('object', $word);
+
+    $yp = $this->em->getRepository('Entities\YP')->findBy(array('domain' => $domain[0]->getId(), 'word' => $word->getId()));
+    $this->assertNotEmpty($yp);
+
+    foreach ($yp as $row)
+      $this->em->remove($row);
+
+    $this->em->flush();
+
+    $yp = $this->em->getRepository('Entities\YP')->findBy(array('domain' => $domain[0]->getId(), 'word' => $word->getId()));
+    $this->assertEmpty($yp);
   }
 
   public function tearDown()
