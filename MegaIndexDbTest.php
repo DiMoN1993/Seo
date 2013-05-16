@@ -239,12 +239,12 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
     $newDomain = $this->em->getRepository('Entities\Domain')->find(2);
     $newWord = $this->em->getRepository('Entities\Words')->find(5);
 
-    $domain = $this->em->getRepository('Entities\Domain')->findBy(array ('name' => $this->domains[0]));
-    $this->assertInternalType('array', $domain);
+    $domain = $this->em->getRepository('Entities\Domain')->find(1);
+    $this->assertInternalType('object', $domain);
     $word = $this->em->getRepository('Entities\Words')->find(1);
     $this->assertInternalType('object', $word);
 
-    $yp = $this->em->getRepository('Entities\YP')->findBy(array('domain' => $domain[0]->getId(), 'word' => $word->getId()));
+    $yp = $this->em->getRepository('Entities\YP')->findBy(array('domain' => $domain->getId(), 'word' => $word->getId()));
     $this->assertNotEmpty($yp);
 
     $yp[0]->setPosition($newPosition);
