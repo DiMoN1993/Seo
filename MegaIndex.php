@@ -8,9 +8,6 @@
  * @const QUANTITY_RESULTS
  * @const POST
  * @const GET
- * @method getYandexPosition ($region, $request, $important=true, $method='get')
- * @method getPrice ($request, $method='get')
- * @method getWordStat ($region, $request, $important=true, $method='get')
  * @author Admin
  */
 class MegaIndex 
