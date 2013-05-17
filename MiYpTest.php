@@ -101,6 +101,9 @@ class MiYpTest extends PHPUnit_Framework_TestCase
     $word = $this->em->getRepository('Entities\Words')->find(1);
     $this->assertInternalType('object', $word);
 
+    $yp = $this->em->createQuery("select yp from Entities\YP yp where yp.domain=".$domain[0]->getId()." and yp.word=".$word->getId())->getResult();
+    $this->assertNotEmpty($yp);
+
     $yp = $this->em->getRepository('Entities\YP')->findBy(array('domain' => $domain[0]->getId(), 'word' => $word->getId()));
     $this->assertNotEmpty($yp);
   }
