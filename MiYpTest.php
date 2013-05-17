@@ -86,10 +86,6 @@ class MiYpTest extends PHPUnit_Framework_TestCase
     $this->assertNotEmpty($yp);
     $this->assertInternalType('object', $yp->getDomain());
 
-    //It's very important request for us, but he doesn't work. We need something equal.
-    //$yp = $this->em->getRepository('Entities\YP')->findBy(array('domain.name' => $this->domains[0], 'word.name' => $this->words[0]));
-    //$this->assertNotEmpty($yp);
-
     $yp = $this->em->getRepository('Entities\YP')->findBy(array('position' => $this->position[1]));
     $this->assertNotEmpty($yp);
 

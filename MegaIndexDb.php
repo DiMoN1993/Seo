@@ -7,7 +7,7 @@
  * To change this template use File | Settings | File Templates.
  */
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManager, Entities\Region;
 
 require_once 'MegaIndexConfig.php';
 
@@ -19,9 +19,6 @@ class MegaIndexDb
   const YP = 'yp';
   const WORDS = 'words';
   const FREQUENCY = 'frequency';
-
-  private $_dropSql;
-  private $_createSql;
 
   private $_config;
   private $_em;
@@ -52,10 +49,9 @@ class MegaIndexDb
     $this->_config->setDbOptions($driver, $host, $user, $password);
     $this->_em = EntityManager::create($this->_config->getDbOptions(), $this->_config->getConfig());
     $this->_conn = $this->_em->getConnection();
-    $this->prepareDb();
   }
 
-  private function prepareDb()
+  public function createTables()
   {
     $toSchema = new Doctrine\DBAL\Schema\Schema();
     $primaryKey = "id";
@@ -113,18 +109,31 @@ class MegaIndexDb
     $freq->addForeignKeyConstraint($words, array("word_id"), array("id"), array("onUpdate" => "CASCADE", "onDelete" => "CASCADE"));
     $freq->addForeignKeyConstraint($regions, array("region_id"), array("id"), array("onUpdate" => "CASCADE", "onDelete" => "CASCADE"));
 
-    $this->_createSql = $toSchema->toSql($this->_conn->getDatabasePlatform());
-    $this->_dropSql = $toSchema->toDropSql($this->_conn->getDatabasePlatform());
-  }
-
-  public function createTables()
-  {
-    $this->transaction($this->_createSql);
+    $createSql = $toSchema->toSql($this->_conn->getDatabasePlatform());
+    $this->transaction($createSql);
   }
 
   public function destroyTables()
   {
-    $this->transaction($this->_dropSql);
+    $toSchema = new Doctrine\DBAL\Schema\Schema();
+    $dropSql = $toSchema->toDropSql($this->_conn->getDatabasePlatform());
+    $this->transaction($dropSql);
+  }
+
+  public function setRegions()
+  {
+    $regions = array("Москва");
+    $code = array("213");
+    for ($i=0; $i<1; $i++)
+    {
+      $recRegions[$i] = new Region();
+
+      $recRegions[$i]->setName($regions[$i]);
+      $recRegions[$i]->setCode($code[$i]);
+      $this->_em->persist($recRegions[$i]);
+
+      $this->_em->flush();
+    }
   }
 
   public function destroyLiteTables()
