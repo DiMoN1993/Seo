@@ -72,6 +72,7 @@ class MegaIndexDb
     $words->addColumn("name", "string", array("length" => 255));
     $words->addColumn("price", "string", array("length" => 255));
     $words->addColumn("date", "integer");
+    $words->addUniqueIndex(array("name"));
     $words->setPrimaryKey(array("id"));
     $words->getColumn($primaryKey)->setAutoincrement(true);
     //$myTable->addUniqueIndex(array("name"));

@@ -96,6 +96,11 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
     $word = $this->em->getRepository('Entities\Words')->findBy(array('name' => $this->words[1]));
     $this->assertNotEmpty($word);
 
+    $word = $this->em->createQuery("select words from Entities\Words words where words.date>=".strtotime($this->date[1]))->getResult();
+    $this->assertInternalType('array',$word);
+    $this->assertInternalType('object',$word[0]);
+    $this->assertNotEmpty($word);
+
     $word = $this->em->getRepository('Entities\Words')->find(6);
     $this->assertNotEmpty($word);
 
