@@ -11,10 +11,8 @@
               Entities\YP,
               Entities\Frequency;
 
-            function __autoload($className)
-            {
-              include_once($className.".php");
-            }
+            require_once("MegaIndex.php");
+            require_once("MegaIndexDb.php");
 
             $action = 'getstat';
             switch ($_GET['action'])
@@ -36,22 +34,29 @@
                   $time = time()-$time;
                   $db = new MegaIndexDb();
                   $db->createConnection('megaindex', 'pdo_mysql', 'localhost', 'root', 'root');
-                  $em = $db->getEntityManager();
-                  //$conn = $db->getConnection();
 
-                  $region = (int)$_POST['region'];
+                  $em = $db->getEntityManager();
+
+                  $regionCode = (int)$_POST['region'];
                   $url = trim($_POST['url']);
                   $requests = explode(',', $_POST['words']);
 
-                  $api = new MegaIndex($url);
+                  $api = new MegaIndex($url, 'sagdiv@gmail.com', 'VqGPOv');
 
                   foreach ($requests as $request)
                   {
                     $request = trim($request);
+
                     $word = $em->createQuery("select words from Entities\Words words where words.name=:name and words.date>=".$time);
                     $word = $word->setParameter('name', $request)->getResult();
-                    if (empty($word[0]->getPrice()))
+                    if (empty($word))
                     {
+                      $oldWord= $em->createQuery("select words from Entities\Words words where words.name=:name");
+                      $oldWord->setParameter('name', $request)->getResult();
+                      if (!empty($oldWord))
+                      {
+                        $em->remove($oldWord[0]);
+                      }
                       $word[0] = new Words();
                       $word[0]->setName($request);
                       $word[0]->setPrice($api->getPrice($request));
@@ -62,7 +67,7 @@
                     }
 
                     $domain = $em->getRepository('Entities\Domain')->findBy(array('name' => $url));
-                    if (empty($domain[0]->getName()))
+                    if (empty($domain))
                     {
                       $domain[0] = new Domain();
                       $domain[0]->setName($url);
@@ -71,11 +76,16 @@
                       $em->flush();
                     }
 
-                    $region = $em->getRepository('Entities\Region')->findBy(array('code' => $region));
+                    $region = $em->getRepository('Entities\Region')->findBy(array('code' => $regionCode));
 
                     $yp = $em->createQuery("select yp from Entities\YP yp where yp.domain=".$domain[0]->getId()." and yp.region=".$region[0]->getId()." and yp.word=".$word[0]->getId()." and yp.date>=".$time)->getResult();
-                    if (empty($yp[0]->getPosition()))
+                    if (empty($yp))
                     {
+                      $oldYp = $em->createQuery("select yp from Entities\YP yp where yp.domain=".$domain[0]->getId()." and yp.region=".$region[0]->getId()." and yp.word=".$word[0]->getId())->getResult();
+                      if (!empty($oldYp))
+                      {
+                        $em->remove($oldYp[0]);
+                      }
                       $yp[0] = new YP();
                       $yp[0]->setDate(time());
                       $yp[0]->setRegion($region[0]);
@@ -88,9 +98,14 @@
                       $em->flush();
                     }
 
-                    $freq = $em->createQuery("select freq from Entities\YP freq where freq.region=".$region[0]->getId()." and freq.word=".$word[0]->getId()." and freq.date>=".$time)->getResult();
-                    if (empty($freq[0]->getFrequency()))
+                    $freq = $em->createQuery("select freq from Entities\Frequency freq where freq.region=".$region[0]->getId()." and freq.word=".$word[0]->getId()." and freq.date>=".$time)->getResult();
+                    if (empty($freq))
                     {
+                      $oldFreq = $em->createQuery("select freq from Entities\Frequency freq where freq.region=".$region[0]->getId()." and freq.word=".$word[0]->getId())->getResult();
+                      if (!empty($oldFreq))
+                      {
+                        $em->remove($oldFreq[0]);
+                      }
                       $freq[0] = new Frequency();
                       $freq[0]->setWord($word[0]);
                       $freq[0]->setRegion($region[0]);
@@ -101,12 +116,17 @@
 
                       $em->flush();
                     }
-
-                    $domain[] = $domain[0];
-                    $word[] = $word[0];
-                    $region[] = $region[0];
-                    $yp[] = $yp[0];
-                    $freq[] = $freq[0];
+                    //this arrays contain answers on request
+                    $domains[] = $domain[0];
+                    //unset($domain);
+                    $words[] = $word[0];
+                    //unset ($word);
+                    $regions[] = $region[0];
+                    //unset ($region);
+                    $yps[] = $yp[0];
+                    //unset ($yp);
+                    $freqs[] = $freq[0];
+                    //unset ($freq);
                   }
                 }
                 else
