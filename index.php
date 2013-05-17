@@ -48,7 +48,8 @@
                   foreach ($requests as $request)
                   {
                     $request = trim($request);
-                    $word = $em->createQuery("select words from Entities\Words words where words.name=".$request." and words.date>=".$time)->getResult();
+                    $word = $em->createQuery("select words from Entities\Words words where words.name=:name and words.date>=".$time);
+                    $word = $word->setParameter('name', $request)->getResult();
                     if (empty($word[0]->getPrice()))
                     {
                       $word[0] = new Words();
@@ -63,7 +64,7 @@
                     $domain = $em->getRepository('Entities\Domain')->findBy(array('name' => $url));
                     if (empty($domain[0]->getName()))
                     {
-                      $domain[0] = new Words();
+                      $domain[0] = new Domain();
                       $domain[0]->setName($url);
                       $em->persist($domain[0]);
 
