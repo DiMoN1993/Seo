@@ -7,6 +7,7 @@ use Entities\Domain,
 
 require_once("MegaIndex.php");
 require_once("MegaIndexDb.php");
+require_once("MegaIndexConfig.php");
 
 try
 {
@@ -15,16 +16,17 @@ try
     $time = 3600*24*5;
     $time = time()-$time;
     $db = new MegaIndexDb();
-    $db->createConnection('megaindex', 'pdo_mysql', 'localhost', 'root', 'root');
-
+    $config = new MegaIndexConfig();
+    //$db->createConnection('megaindex', 'pdo_mysql', 'localhost', 'root', 'root');
+    $db->createConnection($config->dbName, $config->dbDriver, $config->dbHost, $config->dbLogin, $config->dbPassword);
     $em = $db->getEntityManager();
 
     $regionCode = (int)$_POST['region'];
     $url = trim($_POST['url']);
     $requests = explode(',', $_POST['words']);
 
-    $api = new MegaIndex($url, 'sagdiv@gmail.com', 'VqGPOv');
-
+    //$api = new MegaIndex($url, 'sagdiv@gmail.com', 'VqGPOv');
+    $api = new MegaIndex($url, $config->apiEmail, $config->apiPassword);
     $domain = $em->getRepository('Entities\Domain')->findBy(array('name' => $url));
     if (empty($domain))
     {

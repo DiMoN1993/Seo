@@ -8,8 +8,7 @@
  */
 
 use Doctrine\ORM\EntityManager, Entities\Region;
-
-require_once 'MegaIndexConfig.php';
+require_once 'MegaIndexDbConfig.php';
 
 class MegaIndexDb
 {
@@ -27,7 +26,7 @@ class MegaIndexDb
 
   public function __construct()
   {
-    $this->_config = new MegaIndexConfig();
+    $this->_config = new MegaIndexDbConfig();
     $this->_config->setDefaultSettings();
   }
 
