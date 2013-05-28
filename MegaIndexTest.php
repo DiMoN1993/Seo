@@ -7,7 +7,8 @@
  * To change this template use File | Settings | File Templates.
  */
 
-require_once ('MegaIndex.php');
+require_once('MegaIndex.php');
+require_once("MegaIndexConfig.php");
 
 class MegaIndexTest extends PHPUnit_Framework_TestCase
 {
@@ -18,7 +19,8 @@ class MegaIndexTest extends PHPUnit_Framework_TestCase
 
   public function __construct ()
   {
-    $this->_api = new MegaIndex('ru.wikipedia.org','sagdiv@gmail.com', 'VqGPOv');
+    $config = new MegaIndexConfig();
+    $this->_api = new MegaIndex('ru.wikipedia.org', $config->apiEmail, $config->apiPassword);
   }
 
   public function testWordStatReturnInternalType()
