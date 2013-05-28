@@ -1,75 +1,29 @@
 <?php
-
-use Doctrine\ORM\Configuration, Doctrine\Common\ClassLoader, Doctrine\Common\Cache\ApcCache;
-
-require_once 'Doctrine/Common/ClassLoader.php';
-
+/**
+ * Created by JetBrains PhpStorm.
+ * User: devel
+ * Date: 5/28/13
+ * Time: 3:14 PM
+ * To change this template use File | Settings | File Templates.
+ */
 class MegaIndexConfig
 {
-  public $_classLoader;
-  private $_config;
-  public $_cache;
-  private $_dbOpt;
-  private $_dbName;
-
-  public function setDefaultSettings($path=__DIR__)
-  {
-    $this->_classLoader = new ClassLoader('Doctrine\ORM', $path);
-    $this->_classLoader->register();
-    $this->_classLoader = new ClassLoader('Doctrine\DBAL', $path);
-    $this->_classLoader->register();
-    $this->_classLoader = new ClassLoader('Doctrine\Common', $path);
-    $this->_classLoader->register();
-    $this->_classLoader = new ClassLoader('Doctrine\Symfony', $path);
-    $this->_classLoader->register();
-    $this->_classLoader = new ClassLoader('Entities', $path);
-    $this->_classLoader->register();
-    $this->_classLoader = new ClassLoader('Proxies', $path);
-    $this->_classLoader->register();
-
-    $this->_config = new Configuration;
-    $this->_cache = new ApcCache;
-    $this->_config->setMetadataCacheImpl($this->_cache);
-    $driverImpl = $this->_config->newDefaultAnnotationDriver(array(__DIR__."/Entities"));
-    $this->_config->setMetadataDriverImpl($driverImpl);
-    $this->_config->setQueryCacheImpl($this->_cache);
-
-    $this->_config->setProxyDir(__DIR__.'/Proxies');
-    $this->_config->setProxyNamespace('Proxies');
-    $this->_config->setMetadataCacheImpl(new \Doctrine\Common\Cache\ArrayCache);
-  }
-
-  public function setDbOptions($driver, $host, $user='', $password='')
-  {
-      $this->_dbOpt = array(
-        'driver'   => $driver,
-        'host'     => $host,
-        'user'     => $user,
-        'password' => $password,
-        'driverOptions' => array(1002 => 'SET NAMES utf8'));
-      if (!empty($this->_dbName))
-        $this->_dbOpt['dbname'] = $this->_dbName;
-  }
-
-  public function setDbName($name)
-  {
-    $this->_dbName = $name;
-  }
-
-  public function getConfig()
-  {
-    return $this->_config;
-  }
-
-  public function getDbOptions()
-  {
-    return $this->_dbOpt;
-  }
-
-  public function getDbName()
-  {
-    return $this->_dbName;
-  }
+  public $apiEmail = 'sagdiv@gmail.com';
+  public $apiPassword = 'VqGPOv';
+  public $dbLogin = 'root';
+  public $dbPassword = 'root';
+  public $dbDriver = 'pdo_mysql';
+  public $dbHost = 'localhost';
+  public $dbName = 'megaindex';
+  public $testDbName = 'megaindex3';
 }
-
-
+/*
+$configuration = array(
+  'ApiEmail' => 'sagdiv@gmail.com',
+  'ApiPassword' => 'VqGPOv',
+  'DbLogin' => 'root',
+  'DbPassword' => 'root',
+  'DbDriver' => 'pdo_mysql',
+  'DbHost' => 'localhost',
+  'DbName' => 'megaindex'
+);*/
