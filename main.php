@@ -5,7 +5,7 @@ use Entities\Domain,
   Entities\YP,
   Entities\Frequency;
 
-require_once("MegaIndex.php");
+require_once("MegaIndexApi.php");
 require_once("MegaIndexDb.php");
 require_once("MegaIndexConfig.php");
 
@@ -26,7 +26,7 @@ try
     $requests = explode(',', $_POST['words']);
 
     //$api = new MegaIndex($url, 'sagdiv@gmail.com', 'VqGPOv');
-    $api = new MegaIndex($url, $config->apiEmail, $config->apiPassword);
+    $api = new MegaIndexApi($url, $config->apiEmail, $config->apiPassword);
     $domain = $em->getRepository('Entities\Domain')->findBy(array('name' => $url));
     if (empty($domain))
     {
@@ -38,7 +38,8 @@ try
     }
 
     $region = $em->getRepository('Entities\Region')->findBy(array('code' => $regionCode));
-
+    if (empty($region))
+      throw new Exception('Table region is empty');
     foreach ($requests as $request)
     {
       $request = trim($request);
