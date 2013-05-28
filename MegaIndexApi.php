@@ -10,7 +10,7 @@
  * @const GET
  * @author Admin
  */
-class MegaIndex 
+class MegaIndexApi
 {
     const MEGAINDEX_API = 'http://api.megaindex.ru/';
     const QUANTITY_RESULTS = '100';
@@ -22,8 +22,12 @@ class MegaIndex
     public $password;
     public $url;
 
-    public function __construct($url, $user='megaindex-api-test@megaindex.ru', $password='123456')
+    public function __construct($url, $user, $password)
     {
+        if (empty ($user))
+          $user = 'megaindex-api-test@megaindex.ru';
+        if (empty($password))
+          $password = '123456';
         $this->user = $user;
         $this->password = $password;
         $this->url = $url;

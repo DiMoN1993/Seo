@@ -7,10 +7,10 @@
  * To change this template use File | Settings | File Templates.
  */
 
-require_once('MegaIndex.php');
+require_once('MegaIndexApi.php');
 require_once("MegaIndexConfig.php");
 
-class MegaIndexTest extends PHPUnit_Framework_TestCase
+class MiApiTest extends PHPUnit_Framework_TestCase
 {
   private $_api;
   private $_array = array ('автомобиль', 'космические рейнджеры');
@@ -20,7 +20,7 @@ class MegaIndexTest extends PHPUnit_Framework_TestCase
   public function __construct ()
   {
     $config = new MegaIndexConfig();
-    $this->_api = new MegaIndex('ru.wikipedia.org', $config->apiEmail, $config->apiPassword);
+    $this->_api = new MegaIndexApi('ru.wikipedia.org', $config->apiEmail, $config->apiPassword);
   }
 
   public function testWordStatReturnInternalType()
