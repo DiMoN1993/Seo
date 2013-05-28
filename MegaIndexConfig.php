@@ -16,6 +16,12 @@ class MegaIndexConfig
   public $dbHost = 'localhost';
   public $dbName = 'megaindex';
   public $testDbName = 'megaindex3';
+  public $validTime;
+
+  public function __construct()
+  {
+    $this->validTime = 3600*24*5;
+  }
 }
 /*
 $configuration = array(
