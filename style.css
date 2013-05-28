@@ -30,3 +30,37 @@ root
         width: 300px;
         height: 200px;
     }
+.tableWrap
+{
+  margin: 0 auto;
+  width: 900px;
+  border: 2px solid #9A0000;
+  border-radius: 9px;
+  display: table;
+}
+  .tableRow
+  {
+    width: inherit;
+    height: 35px;
+    border-bottom: 2px solid gray;
+  }
+  .tableRow:last-child
+  {
+    border-bottom: none;
+  }
+    .header
+    {
+      font-weight: bold;
+    }
+    .tableCell
+    {
+      float: left;
+      width: 19.7%;
+      height: inherit;
+      text-align: center;
+      border-right: 2px solid gray;
+    }
+    .tableCell:last-child
+    {
+      border-right: none;
+    }
