@@ -9,7 +9,10 @@
             switch ($_GET['action'])
             {
               case $action:
-                  include_once('main.php');
+                  //include_once('main.php');
+                  include_once('MegaIndex.php');
+                  //include_once('table.php');
+                  include_once('table2.php');
                 break;
               default:
                 include_once('form.php');
