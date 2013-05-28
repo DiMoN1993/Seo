@@ -9,12 +9,14 @@
 use Entities\Words;
 
 require_once ("MegaIndexDb.php");
+require_once("MegaIndexConfig.php");
 
 class MegaIndexDbTest extends PHPUnit_Framework_TestCase
 {
   private $db;
   private $em;
   private $conn;
+  private $dbName;
 
   private $words;
   private $date;
@@ -26,6 +28,7 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
   public function setUp()
   {
     $this->db = new MegaIndexDb();
+    $config = new MegaIndexConfig();
 
     $this->words = array ('маркер', 'карандашь', 'ластик', 'надувная', 'тетрадь', 'точилка', 'штрих', 'линейка', 'транспортир');
     $this->date = array ("now", "-1 day", "-14 days 2 hours 32 minutes", "-10 days 5 hours 32 minutes",
@@ -34,8 +37,9 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
     //$this->region = array ('Москва', 'Омск', 'Новосибирск', 'Удмуртия', 'Саратов', 'Сочи', 'Санкт Петербург', 'Гондурас', 'Хохляндия');
     //$this->code = array ('1', '55', '59', '13', '77', '44', '23', '98', '65');
     //$this->frequency = array ('10000', '6700', '16340', '14200', '12500', '8800', '6700', '3400', '24000');
+    $this->dbName = $config->testDbName;
 
-    $this->db->createNewDb('megaindex3', 'pdo_mysql', 'localhost', 'root', 'root');
+    $this->db->createNewDb($config->testDbName, $config->dbDriver, $config->dbHost, $config->dbLogin, $config->dbPassword);
     $this->em = $this->db->getEntityManager();
     $this->conn = $this->db->getConnection();
 
@@ -137,7 +141,7 @@ class MegaIndexDbTest extends PHPUnit_Framework_TestCase
   public function tearDown()
   {
     $this->db->destroyTables();
-    $this->db->destroyDb('megaindex3');
+    $this->db->destroyDb($this->dbName);
     $this->conn->close();
   }
 }

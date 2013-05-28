@@ -12,12 +12,14 @@ use Entities\Domain,
    Entities\YP;
 
 require_once("MegaIndexDb.php");
+require_once("MegaIndexConfig.php");
 
 class MiYpTest extends PHPUnit_Framework_TestCase
 {
   private $db;
   private $em;
   private $conn;
+  private $dbName;
 
   private $words;
   private $date;
@@ -30,6 +32,7 @@ class MiYpTest extends PHPUnit_Framework_TestCase
   public function setUp()
   {
     $this->db = new MegaIndexDb();
+    $config = new MegaIndexConfig();
 
     $this->words = array ('маркер', 'карандашь', 'ластик', 'надувная', 'тетрадь', 'точилка', 'штрих', 'линейка', 'транспортир');
     $this->date = array ("now", "-1 day", "-14 days 2 hours 32 minutes", "-10 days 5 hours 32 minutes",
@@ -40,7 +43,9 @@ class MiYpTest extends PHPUnit_Framework_TestCase
     $this->domains = array ('ru.wikipedia.org', 'lenta.ru', 'vk.com', 'tut.ru', 'youtube.com', 'twitter.com', 'mail.ru', 'whitehouse.com', 'wowcircle.com');
     $this->prices = array ('12500', '6700', '14200', '3400', '8800', '10000', '24000', '16340', '20101');
 
-    $this->db->createNewDb('megaindex3', 'pdo_mysql', 'localhost', 'root', 'root');
+    $this->dbName = $config->testDbName;
+
+    $this->db->createNewDb($config->testDbName, $config->dbDriver, $config->dbHost, $config->dbLogin, $config->dbPassword);
     $this->em = $this->db->getEntityManager();
     $this->conn = $this->db->getConnection();
 
@@ -154,7 +159,7 @@ class MiYpTest extends PHPUnit_Framework_TestCase
   public function tearDown()
   {
     $this->db->destroyTables();
-    $this->db->destroyDb('megaindex3');
+    $this->db->destroyDb($this->dbName);
     $this->conn->close();
   }
 }

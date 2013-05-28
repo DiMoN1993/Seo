@@ -9,22 +9,26 @@
 use Entities\Domain;
 
 require_once("MegaIndexDb.php");
+require_once("MegaIndexConfig.php");
 
 class MiDomainTest extends PHPUnit_Framework_TestCase
 {
   private $db;
   private $em;
   private $conn;
+  private $dbName;
 
   private $domains;
 
   public function setUp()
   {
     $this->db = new MegaIndexDb();
+    $config = new MegaIndexConfig();
 
     $this->domains = array ('ru.wikipedia.org', 'lenta.ru', 'vk.com', 'tut.ru', 'youtube.com', 'twitter.com', 'mail.ru', 'whitehouse.com', 'wowcircle.com');
+    $this->dbName = $config->testDbName;
 
-    $this->db->createNewDb('megaindex3', 'pdo_mysql', 'localhost', 'root', 'root');
+    $this->db->createNewDb($config->testDbName, $config->dbDriver, $config->dbHost, $config->dbLogin, $config->dbPassword);
     $this->em = $this->db->getEntityManager();
     $this->conn = $this->db->getConnection();
 
@@ -105,7 +109,7 @@ class MiDomainTest extends PHPUnit_Framework_TestCase
   public function tearDown()
   {
     $this->db->destroyTables();
-    $this->db->destroyDb('megaindex3');
+    $this->db->destroyDb($this->dbName);
     $this->conn->close();
   }
 }
