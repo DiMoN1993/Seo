@@ -6,40 +6,38 @@ require_once 'Doctrine/Common/ClassLoader.php';
 
 class MegaIndexDbConfig
 {
-  public $_classLoader;
-  private $_config;
-  public $_cache;
   private $_dbOpt;
   private $_dbName;
+  private $config;
 
-  public function setDefaultSettings($path=__DIR__)
+  protected function setDefaultSettings($path=__DIR__)
   {
-    $this->_classLoader = new ClassLoader('Doctrine\ORM', $path);
-    $this->_classLoader->register();
-    $this->_classLoader = new ClassLoader('Doctrine\DBAL', $path);
-    $this->_classLoader->register();
-    $this->_classLoader = new ClassLoader('Doctrine\Common', $path);
-    $this->_classLoader->register();
-    $this->_classLoader = new ClassLoader('Doctrine\Symfony', $path);
-    $this->_classLoader->register();
-    $this->_classLoader = new ClassLoader('Entities', $path);
-    $this->_classLoader->register();
-    $this->_classLoader = new ClassLoader('Proxies', $path);
-    $this->_classLoader->register();
+    $classLoader = new ClassLoader('Doctrine\ORM', $path);
+    $classLoader->register();
+    $classLoader = new ClassLoader('Doctrine\DBAL', $path);
+    $classLoader->register();
+    $classLoader = new ClassLoader('Doctrine\Common', $path);
+    $classLoader->register();
+    $classLoader = new ClassLoader('Doctrine\Symfony', $path);
+    $classLoader->register();
+    $classLoader = new ClassLoader('Entities', $path);
+    $classLoader->register();
+    $classLoader = new ClassLoader('Proxies', $path);
+    $classLoader->register();
 
-    $this->_config = new Configuration;
-    $this->_cache = new ApcCache;
-    $this->_config->setMetadataCacheImpl($this->_cache);
-    $driverImpl = $this->_config->newDefaultAnnotationDriver(array(__DIR__."/Entities"));
-    $this->_config->setMetadataDriverImpl($driverImpl);
-    $this->_config->setQueryCacheImpl($this->_cache);
+    $this->config = new Configuration;
+    $cache = new ApcCache;
+    $this->config->setMetadataCacheImpl($cache);
+    $driverImpl = $this->config->newDefaultAnnotationDriver(array(__DIR__."/Entities"));
+    $this->config->setMetadataDriverImpl($driverImpl);
+    $this->config->setQueryCacheImpl($cache);
 
-    $this->_config->setProxyDir(__DIR__.'/Proxies');
-    $this->_config->setProxyNamespace('Proxies');
-    $this->_config->setMetadataCacheImpl(new \Doctrine\Common\Cache\ArrayCache);
+    $this->config->setProxyDir(__DIR__.'/Proxies');
+    $this->config->setProxyNamespace('Proxies');
+    $this->config->setMetadataCacheImpl(new \Doctrine\Common\Cache\ArrayCache);
   }
 
-  public function setDbOptions($driver, $host, $user='', $password='')
+  protected function setDbOptions($driver, $host, $user='', $password='')
   {
       $this->_dbOpt = array(
         'driver'   => $driver,
@@ -51,24 +49,24 @@ class MegaIndexDbConfig
         $this->_dbOpt['dbname'] = $this->_dbName;
   }
 
-  public function setDbName($name)
+  protected function setDbName($name)
   {
     $this->_dbName = $name;
   }
 
-  public function getConfig()
-  {
-    return $this->_config;
-  }
-
-  public function getDbOptions()
+  protected function getDbOptions()
   {
     return $this->_dbOpt;
   }
 
-  public function getDbName()
+  protected function getDbName()
   {
     return $this->_dbName;
+  }
+
+  protected function getConfig()
+  {
+    return $this->config;
   }
 }
 

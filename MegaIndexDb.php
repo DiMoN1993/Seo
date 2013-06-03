@@ -10,7 +10,7 @@
 use Doctrine\ORM\EntityManager, Entities\Region;
 require_once 'MegaIndexDbConfig.php';
 
-class MegaIndexDb
+class MegaIndexDb extends MegaIndexDbConfig
 {
   const DEFAULT_PREFIX = "tbl_";
   const DOMAIN = 'domain';
@@ -19,21 +19,19 @@ class MegaIndexDb
   const WORDS = 'words';
   const FREQUENCY = 'frequency';
 
-  private $_config;
   private $_em;
   private $_conn;
   private $_sm;
 
   public function __construct()
   {
-    $this->_config = new MegaIndexDbConfig();
-    $this->_config->setDefaultSettings();
+    $this->setDefaultSettings();
   }
 
   public function createNewDb($dbName, $driver, $host, $user, $password)
   {
-    $this->_config->setDbOptions($driver, $host, $user, $password);
-    $this->_em = EntityManager::create($this->_config->getDbOptions(), $this->_config->getConfig());
+    $this->setDbOptions($driver, $host, $user, $password);
+    $this->_em = EntityManager::create($this->getDbOptions(), $this->getConfig());
     $this->_conn = $this->_em->getConnection();
     $this->_sm = $this->_conn->getSchemaManager();
     $this->_sm->createDatabase($dbName);
@@ -44,9 +42,9 @@ class MegaIndexDb
 
   public function createConnection($dbName, $driver, $host, $user, $password)
   {
-    $this->_config->setDbName($dbName);
-    $this->_config->setDbOptions($driver, $host, $user, $password);
-    $this->_em = EntityManager::create($this->_config->getDbOptions(), $this->_config->getConfig());
+    $this->setDbName($dbName);
+    $this->setDbOptions($driver, $host, $user, $password);
+    $this->_em = EntityManager::create($this->getDbOptions(), $this->getConfig());
     $this->_conn = $this->_em->getConnection();
   }
 
@@ -110,6 +108,8 @@ class MegaIndexDb
 
     $createSql = $toSchema->toSql($this->_conn->getDatabasePlatform());
     $this->transaction($createSql);
+
+
   }
 
   public function destroyTables()
@@ -133,18 +133,6 @@ class MegaIndexDb
 
       $this->_em->flush();
     }
-  }
-
-  public function destroyLiteTables()
-  {
-    $queries = array(
-      "DROP TABLE ".self::DEFAULT_PREFIX.self::YP,
-      "DROP TABLE ".self::DEFAULT_PREFIX.self::FREQUENCY,
-      "DROP TABLE ".self::DEFAULT_PREFIX.self::REGION,
-      "DROP TABLE ".self::DEFAULT_PREFIX.self::WORDS,
-      "DROP TABLE ".self::DEFAULT_PREFIX.self::DOMAIN,
-    );
-    $this->transaction($queries);
   }
 
   public function destroyDb($dbName)
