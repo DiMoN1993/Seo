@@ -10,19 +10,19 @@ use Entities\Domain,
   Entities\Words,
   Entities\Region,
   Entities\YP,
-  Entities\Frequency;
+  Entities\Frequency,
+  Entities\Task,
+  Entities\TaskList;
 
-require_once("MegaIndexApi.php");
-require_once("MegaIndexDb.php");
+require_once("Tasks/PriceTask.php");
+require_once("Tasks/YpTask.php");
+require_once("Tasks/FrequencyTask.php");
 require_once("MegaIndexConfig.php");
 
 class MegaIndex
 {
   private $time;
-  private $db;
   private $em;
-  private $url;
-  private $api;
 
   private $region;
   private $domain;
@@ -30,22 +30,28 @@ class MegaIndex
 
   public function __construct($region, $url)
   {
-    $this->db = new MegaIndexDb();
-    $config = new MegaIndexConfig();
-    $this->api = new MegaIndexApi($this->url, $config->apiEmail, $config->apiPassword);
+    if (empty($region))
+    {
+      throw new Exception ('Region field is empty.');
+    }
+    if (empty($url))
+    {
+      throw new Exception ('Url field is empty.');
+    }
 
-    $this->db->createConnection($config->dbName, $config->dbDriver, $config->dbHost, $config->dbLogin, $config->dbPassword);
-    $this->em = $this->db->getEntityManager();
+    $url = trim($url);
 
-    $this->time = time() - $config->validTime;
+    $db = new MegaIndexDb();
+    $db->createConnection(MegaIndexConfig::$dbName, MegaIndexConfig::$dbDriver, MegaIndexConfig::$dbHost, MegaIndexConfig::$dbLogin, MegaIndexConfig::$dbPassword);
+    $this->em = MegaIndexDb::getEntityManager();
+
+    $this->time = time() - MegaIndexConfig::$validTime;
 
     $this->region = $this->em->getRepository('Entities\Region')->findBy(array('code' => (int)$region));
     if (empty($this->region))
       throw new Exception('Table region is empty');
 
-    $this->url = trim($url);
-
-    $this->domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => $this->url));
+    $this->domain = $this->em->getRepository('Entities\Domain')->findBy(array('name' => $url));
     if (empty($this->domain))
     {
       $this->domain[0] = new Domain();
@@ -66,101 +72,157 @@ class MegaIndex
     return $this->region[0];
   }
 
-  public function getWords($request)
+  public function checkWords($requests)
   {
-    $request = trim($request);
-
-    $word = $this->em->createQuery("select words from Entities\Words words where words.name=:name and words.date>=".$this->time);
-    $word = $word->setParameter('name', $request)->getResult();
-    if (empty($word))
+    $words = $this->em->getRepository('Entities\Words')->findBy(array('name' => $requests));
+    foreach($requests as $value)
     {
-      $word = $this->em->createQuery("select words from Entities\Words words where words.name=:name");
-      $word = $word->setParameter('name', $request)->getResult();
-      if (!empty($word[0]))
+      $find = false;
+      foreach($words as $oneWord)
       {
-        $word[0]->setName($request);
-        $word[0]->setPrice($this->api->getPrice($request));
-        $word[0]->setDate(time());
+        if ($oneWord->getName() == $value)
+        {
+          $find = true;
+          break;
+        }
       }
-      else
+      if (!$find)
       {
-        $word[0] = new Words();
-        $word[0]->setName($request);
-        $word[0]->setPrice($this->api->getPrice($request));
-        $word[0]->setDate(time());
-      }
-      $this->em->persist($word[0]);
+        $word = new Words();
+        $word->setName($value);
+        $word->setPrice('0');
+        $word->setDate(0);
 
-      $this->em->flush();
+        $this->em->persist($word);
+      }
     }
-    $this->word = $word;
 
-    return $word[0];
+    $this->em->flush();
+
+    $words = $this->em->getRepository('Entities\Words')->findBy(array('name' => $requests));
+    $this->word = $words;
   }
 
-  public function getYp($request)
+  public function taskPrice($requests, $list)
   {
-    if (empty($this->word[0]))
-      $this->getWords($request);
+    $query = "select words from Entities\Words words where words.name in (";
+    $i=0;
+    foreach ($requests as $word)
+    {
+      $query .= "?".$i.", ";
+      $parameters[$i] = $word;
+      $i++;
+    }
+    $query = substr_replace($query, "", strlen($query)-2);
+    $query .= ") and words.date<".$this->time;
+    $words = $this->em->createQuery($query)->setParameters($parameters)->getResult();
 
-    $yp = $this->em->createQuery("select yp from Entities\YP yp where yp.domain=".$this->domain[0]->getId()." and yp.region=".$this->region[0]->getId()." and yp.word=".$this->word[0]->getId()." and yp.date>=".$this->time)->getResult();
+    if (!empty($words))
+    {
+      foreach ($words as $word)
+      {
+        $names[] = $word->getName();
+      }
+      $task = new PriceTask($names);
+      $this->saveTask($task, $list);
+    }
+  }
+
+  private function getWord($request)
+  {
+    if (empty($this->word))
+    {
+      $this->checkWords($request);
+    }
+
+    foreach ($this->word as $oneWord)
+    {
+      if ($oneWord->getName() == $request)
+      {
+        $word = $oneWord;
+        break;
+      }
+    }
+
+    return $word;
+  }
+
+  private function saveTask($task, $list)
+  {
+    $taskRow = new Task();
+    $taskRow->setList($list);
+    $taskRow->setClassName(get_class($task));
+    $taskRow->setBody(serialize($task));
+
+    $this->em->persist($taskRow);
+    $this->em->flush();
+  }
+
+  public function taskYp($request, $list)
+  {
+    $word = $this->getWord($request);
+
+    $yp = $this->em->createQuery("select yp from Entities\YP yp where yp.domain=".$this->domain[0]->getId()." and yp.region=".$this->region[0]->getId()." and yp.word=".$word->getId())->getResult();
     if (empty($yp))
     {
-      $yp = $this->em->createQuery("select yp from Entities\YP yp where yp.domain=".$this->domain[0]->getId()." and yp.region=".$this->region[0]->getId()." and yp.word=".$this->word[0]->getId())->getResult();
-      if (!empty($yp[0]))
-      {
-        $yp[0]->setDate(time());
-        $yp[0]->setRegion($this->region[0]);
-        $yp[0]->setWord($this->word[0]);
-        $yp[0]->setDomain($this->domain[0]);
-        $yp[0]->setPosition($this->api->getYandexPosition($this->word[0]->getName(), $this->region[0]->getCode()));
-      }
-      else
-      {
-        $yp[0] = new YP();
-        $yp[0]->setDate(time());
-        $yp[0]->setRegion($this->region[0]);
-        $yp[0]->setWord($this->word[0]);
-        $yp[0]->setDomain($this->domain[0]);
-        $yp[0]->setPosition($this->api->getYandexPosition($this->word[0]->getName(), $this->region[0]->getCode()));
-      }
-      $this->em->persist($yp[0]);
+      $yp = new YP();
+      $yp->setDate(0);
+      $yp->setDomain($this->domain[0]);
+      $yp->setRegion($this->region[0]);
+      $yp->setPosition('-1');
+      $yp->setWord($word);
 
+      $this->em->persist($yp);
       $this->em->flush();
     }
+    else
+    {
+      $yp = $yp[0];
+    }
 
-    return $yp[0];
+    if ($this->time > $yp->getDate())
+    {
+      $task = new YpTask($yp->getId(), $request);
+      $this->saveTask($task, $list);
+    }
   }
 
-  public function getFrequency($request)
+  public function taskFrequency($request, $list)
   {
-    if (empty($this->word[0]))
-      $this->getWords($request);
+    $word = $this->getWord($request);
 
-    $freq = $this->em->createQuery("select freq from Entities\Frequency freq where freq.region=".$this->region[0]->getId()." and freq.word=".$this->word[0]->getId()." and freq.date>=".$this->time)->getResult();
+    $freq = $this->em->createQuery("select freq from Entities\Frequency freq where freq.region=".$this->region[0]->getId()." and freq.word=".$word->getId())->getResult();
     if (empty($freq))
     {
-      $freq = $this->em->createQuery("select freq from Entities\Frequency freq where freq.region=".$this->region[0]->getId()." and freq.word=".$this->word[0]->getId())->getResult();
-      if (!empty($freq[0]))
-      {
-        $freq[0]->setWord($this->word[0]);
-        $freq[0]->setRegion($this->region[0]);
-        $freq[0]->setDate(time());
-        $freq[0]->setFrequency($this->api->getWordStat($this->word[0]->getName(), $this->region[0]->getCode()));
-      }
-      else
-      {
-        $freq[0] = new Frequency();
-        $freq[0]->setWord($this->word[0]);
-        $freq[0]->setRegion($this->region[0]);
-        $freq[0]->setDate(time());
-        $freq[0]->setFrequency($this->api->getWordStat($this->word[0]->getName(), $this->region[0]->getCode()));
-      }
-      $this->em->persist($freq[0]);
+      $freq = new Frequency();
+      $freq->setWord($word);
+      $freq->setRegion($this->region[0]);
+      $freq->setDate(0);
+      $freq->setFrequency('-1');
 
+      $this->em->persist($freq);
       $this->em->flush();
     }
+    else
+    {
+      $freq = $freq[0];
+    }
 
-    return $freq[0];
+    if ($this->time > $freq->getDate())
+    {
+      $task = new FrequencyTask($freq->getId(), $request);
+      $this->saveTask($task, $list);
+    }
+  }
+
+  public function createNewList()
+  {
+    $list = new Entities\TaskList();
+    $list->setStatus('wait');
+
+    $this->em->persist($list);
+    $this->em->flush();
+
+    return $list;
   }
 }

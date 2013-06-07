@@ -18,8 +18,10 @@ class MegaIndexDb extends MegaIndexDbConfig
   const YP = 'yp';
   const WORDS = 'words';
   const FREQUENCY = 'frequency';
+  const TASK_LIST = 'taskList';
+  const TASK = 'task';
 
-  private $_em;
+  private static $_em;
   private $_conn;
   private $_sm;
 
@@ -31,8 +33,8 @@ class MegaIndexDb extends MegaIndexDbConfig
   public function createNewDb($dbName, $driver, $host, $user, $password)
   {
     $this->setDbOptions($driver, $host, $user, $password);
-    $this->_em = EntityManager::create($this->getDbOptions(), $this->getConfig());
-    $this->_conn = $this->_em->getConnection();
+    self::$_em = EntityManager::create($this->getDbOptions(), $this->getConfig());
+    $this->_conn = self::$_em->getConnection();
     $this->_sm = $this->_conn->getSchemaManager();
     $this->_sm->createDatabase($dbName);
     $this->_conn->close();
@@ -44,8 +46,8 @@ class MegaIndexDb extends MegaIndexDbConfig
   {
     $this->setDbName($dbName);
     $this->setDbOptions($driver, $host, $user, $password);
-    $this->_em = EntityManager::create($this->getDbOptions(), $this->getConfig());
-    $this->_conn = $this->_em->getConnection();
+    self::$_em  = EntityManager::create($this->getDbOptions(), $this->getConfig());
+    $this->_conn = self::$_em->getConnection();
   }
 
   public function createTables()
@@ -56,7 +58,7 @@ class MegaIndexDb extends MegaIndexDbConfig
     $domain = $toSchema->createTable(self::DEFAULT_PREFIX.self::DOMAIN);
     $domain->addColumn($primaryKey, "integer", array("length" => 11, "auto_increment" => true));
     $domain->addColumn("name", "string", array("length" => 255));
-    $domain->setPrimaryKey(array("id"));
+    $domain->setPrimaryKey(array($primaryKey));
     $domain->addUniqueIndex(array("name"));
     $domain->getColumn($primaryKey)->setAutoincrement(true);
 
@@ -66,7 +68,7 @@ class MegaIndexDb extends MegaIndexDbConfig
     $words->addColumn("price", "string", array("length" => 255));
     $words->addColumn("date", "integer");
     $words->addUniqueIndex(array("name"));
-    $words->setPrimaryKey(array("id"));
+    $words->setPrimaryKey(array($primaryKey));
     $words->getColumn($primaryKey)->setAutoincrement(true);
     //$myTable->addUniqueIndex(array("name"));
 
@@ -84,7 +86,7 @@ class MegaIndexDb extends MegaIndexDbConfig
     $yp->addColumn("region_id", "integer", array("length" => 11));
     $yp->addColumn("position", "string", array("length" => 10));
     $yp->addColumn("date", "integer");
-    $yp->setPrimaryKey(array("id"));
+    $yp->setPrimaryKey(array($primaryKey));
     $yp->getColumn($primaryKey)->setAutoincrement(true);
     $yp->addIndex(array("word_id"));
     $yp->addIndex(array("domain_id"));
@@ -99,17 +101,32 @@ class MegaIndexDb extends MegaIndexDbConfig
     $freq->addColumn("region_id", "integer", array("length" => 11));
     $freq->addColumn("frequency", "string", array("length" => 50));
     $freq->addColumn("date", "integer");
-    $freq->setPrimaryKey(array("id"));
+    $freq->setPrimaryKey(array($primaryKey));
     $freq->getColumn($primaryKey)->setAutoincrement(true);
     $freq->addIndex(array("region_id"));
     $freq->addIndex(array("word_id"));
     $freq->addForeignKeyConstraint($words, array("word_id"), array("id"), array("onUpdate" => "CASCADE", "onDelete" => "CASCADE"));
     $freq->addForeignKeyConstraint($regions, array("region_id"), array("id"), array("onUpdate" => "CASCADE", "onDelete" => "CASCADE"));
 
+    $taskList = $toSchema->createTable(self::DEFAULT_PREFIX.self::TASK_LIST);
+    $taskList->addColumn($primaryKey,  "integer", array("length" => 11, "auto_increment" => true));
+    $taskList->addColumn("status", "string", array("length" => 10));
+    $taskList->setPrimaryKey(array($primaryKey));
+    $taskList->getColumn($primaryKey)->setAutoincrement(true);
+
+    $task = $toSchema->createTable(self::DEFAULT_PREFIX.self::TASK);
+    $task->addColumn($primaryKey,  "integer", array("length" => 11, "auto_increment" => true));
+    $task->addColumn("className", "string", array("length" => 100));
+    $task->addColumn("body","blob");
+    $task->addColumn("list_id", "integer", array("length" => 11));
+    $task->setPrimaryKey(array($primaryKey));
+    $task->getColumn($primaryKey)->setAutoincrement(true);
+    $task->addIndex(array("list_id"));
+    $task->addForeignKeyConstraint($taskList, array("list_id"), array("id"), array("onUpdate" => "CASCADE", "onDelete" => "CASCADE"));
+
+
     $createSql = $toSchema->toSql($this->_conn->getDatabasePlatform());
     $this->transaction($createSql);
-
-
   }
 
   public function destroyTables()
@@ -129,15 +146,15 @@ class MegaIndexDb extends MegaIndexDbConfig
 
       $recRegions[$i]->setName($regions[$i]);
       $recRegions[$i]->setCode($code[$i]);
-      $this->_em->persist($recRegions[$i]);
+      self::$_em->persist($recRegions[$i]);
 
-      $this->_em->flush();
+      self::$_em->flush();
     }
   }
 
   public function destroyDb($dbName)
   {
-      $this->_sm->dropDatabase($dbName);
+    $this->_sm->dropDatabase($dbName);
   }
 
   public function getConnection()
@@ -145,9 +162,16 @@ class MegaIndexDb extends MegaIndexDbConfig
     return $this->_conn;
   }
 
-  public function getEntityManager()
+  public static function getEntityManager()
   {
-    return $this->_em;
+    if (empty(self::$_em))
+    {
+      throw new Exception('Void Entity Manager. Need to establish connection with data base.');
+    }
+    else
+    {
+      return self::$_em;
+    }
   }
 
   public function getSchemaManager()
