@@ -8,20 +8,21 @@
  */
 class MegaIndexConfig
 {
-  public $apiEmail = 'sagdiv@gmail.com';
-  public $apiPassword = 'VqGPOv';
-  public $dbLogin = 'root';
-  public $dbPassword = 'root';
-  public $dbDriver = 'pdo_mysql';
-  public $dbHost = 'localhost';
-  public $dbName = 'megaindex';
-  public $testDbName = 'megaindex3';
-  public $validTime;
+  public static $apiEmail = 'sagdiv@gmail.com';
+  public static $apiPassword = 'VqGPOv';
+  public static $dbLogin = 'root';
+  public static $dbPassword = 'root';
+  public static $dbDriver = 'pdo_mysql';
+  public static $dbHost = 'localhost';
+  public static $dbName = 'megaindex';
+  public static $testDbName = 'megaindex3';
+  public static $validTime = 432000; //5 days
+  /*public $validTime;
 
   public function __construct()
   {
     $this->validTime = 3600*24*5;
-  }
+  }*/
 }
 /*
 $configuration = array(

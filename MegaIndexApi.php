@@ -21,8 +21,20 @@ class MegaIndexApi
     public $user;
     public $password;
     public $url;
+    public $region;
 
-    public function __construct($url, $user, $password)
+    private static $instance;
+
+    public static function getApi($url='', $region='', $user='', $password='')
+    {
+      if (empty(self::$instance))
+      {
+        self::$instance = new MegaIndexApi($url, $region, $user, $password);
+      }
+      return self::$instance;
+    }
+
+    private function __construct($url, $region, $user, $password)
     {
         if (empty ($user))
           $user = 'megaindex-api-test@megaindex.ru';
@@ -31,6 +43,7 @@ class MegaIndexApi
         $this->user = $user;
         $this->password = $password;
         $this->url = $url;
+        $this->region = $region;
     }
 
     private function curlQuery ($address, $data, $method)
@@ -88,14 +101,14 @@ class MegaIndexApi
         curl_close($ch);
     }
     
-    public function getYandexPosition ($request, $region=213, $important=true, $showTitle=1)
+    public function getYandexPosition ($request, $important=true, $showTitle=1)
     {
         if (!is_string($request))
           throw new Exception ('Variable request cant be array in method  MegaIndex::getYandexPosition()!');
         else
           $data['request'] = $request;
 
-        $data['lr'] = $region;
+        $data['lr'] = $this->region;
         $data['results'] = self::QUANTITY_RESULTS;
         $data['show_title'] = $showTitle;
         $important ? $data['imp'] = 1 : $data['imp'] = 0;
@@ -121,9 +134,9 @@ class MegaIndexApi
 
         if (is_array($request))
         {
-          foreach ($request as $value)
+          foreach ($request as $key => $value)
           {
-            $content[$value] = $this->isEmptyAnswer($scanPrice->$value);
+            $content[$key] = $this->isEmptyAnswer($scanPrice->$value);
           }
           return $content;
         }
@@ -141,14 +154,14 @@ class MegaIndexApi
         return self::EMPTY_ANSWER;
     }
 
-    public function getWordStat ($request, $region=213, $important=true)
+    public function getWordStat ($request, $important=true)
     {
         if (!is_string($request))
           throw new Exception ('Variable request cant be array in method MegaIndex::getWordStat()!');
         else
           $data['request'] = $request;
 
-        $data['lr'] = $region;
+        $data['lr'] = $this->region;
         $important ? $data['imp'] = 1 : $data['imp'] = 0;
 
         $stat = $this->curlQuery('scan_wordstat', $data, self::POST);
