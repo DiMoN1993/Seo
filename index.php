@@ -5,14 +5,16 @@
 </head>
 <body>
         <?php
-            $action = 'getstat';
             switch ($_GET['action'])
             {
-              case $action:
-                  //include_once('main.php');
-                  include_once('MegaIndex.php');
-                  //include_once('table.php');
+              case 'tasks':
+                  include_once('tasks.php');
+                break;
+              case 'getstat':
                   include_once('table2.php');
+                break;
+              case 'process':
+                  include_once('process.php');
                 break;
               default:
                 include_once('form.php');

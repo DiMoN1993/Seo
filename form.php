@@ -7,7 +7,7 @@
 </head>
 <body>
   <div id="mainWrapper">
-    <form name="mainForm" id="mainForm" action="index.php?action=getstat" method="post">
+    <form name="mainForm" id="mainForm" action="index.php?action=tasks" method="post">
       <textarea name="words"></textarea>
       <br>
       <input name="url" placeholder="Input url..."/>
